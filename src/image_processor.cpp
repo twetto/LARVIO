@@ -11,10 +11,12 @@
 #include <iostream>
 #include <algorithm>
 #include <set>
+#include <numeric>
 #include <Eigen/Dense>
 
 #include <larvio/image_processor.h>
 #include <larvio/math_utils.hpp>
+#include <larvio/anms.h>
 
 #include <opencv2/core/utility.hpp>
 
@@ -340,7 +342,26 @@ bool ImageProcessor::initializeFirstFrame() {
 
     // Detect new features on the frist image.
     vector<Point2f>().swap(new_pts_);
-    cv::goodFeaturesToTrack(img, new_pts_, processor_config.max_features_num, 0.01, processor_config.min_distance);
+    //cv::goodFeaturesToTrack(img, new_pts_, processor_config.max_features_num, 0.01, processor_config.min_distance);
+    vector<KeyPoint> keyPoints; //vector to keep detected KeyPoints
+    cv::Ptr<FastFeatureDetector> fast = FastFeatureDetector::create(processor_config.fast_threshold, true);
+    fast->detect(img, keyPoints);
+    
+    // sorting keypoints by deacreasing order of strength
+    vector<float> responseVector;
+    for (unsigned int i =0 ; i<keyPoints.size(); i++) responseVector.push_back(keyPoints[i].response);
+    vector<int> Indx(responseVector.size()); std::iota (std::begin(Indx), std::end(Indx), 0);
+    if (responseVector.size() > 0) {
+        cv::sortIdx(responseVector, Indx, cv::SORT_DESCENDING);
+    }
+    vector<KeyPoint> keyPointsSorted;
+    for (unsigned int i = 0; i < keyPoints.size(); i++) keyPointsSorted.push_back(keyPoints[Indx[i]]);
+
+    // Suppression via Square Covering (SSC)
+    vector<KeyPoint> sscKP = ssc(keyPointsSorted,processor_config.max_features_num,0.1,img.cols,img.rows);
+
+    // convert keypoints back to point2f new_pts_
+    cv::KeyPoint::convert(sscKP, new_pts_);
 
     // Initialize last publish time
     last_pub_time = curr_img_ptr->timeStampToSec;
@@ -1031,9 +1052,34 @@ void ImageProcessor::findNewFeaturesToBeTracked() {
 
     // detect new features to be tracked
     vector<Point2f>().swap(new_pts_);
-    if (processor_config.max_features_num-curr_pts_.size() > 0)
-        cv::goodFeaturesToTrack(curr_img, new_pts_, 
-            processor_config.max_features_num-curr_pts_.size(), 0.01, processor_config.min_distance, mask);
+    int diff = processor_config.max_features_num-curr_pts_.size();
+    //if (processor_config.max_features_num-curr_pts_.size() > 0) {
+    if (diff > 0) {
+        //cv::goodFeaturesToTrack(curr_img, new_pts_, 
+        //    processor_config.max_features_num-curr_pts_.size(), 0.01, processor_config.min_distance, mask);
+
+        vector<KeyPoint> keyPoints; //vector to keep detected KeyPoints
+        cv::Ptr<FastFeatureDetector> fast = FastFeatureDetector::create(processor_config.fast_threshold, true);
+        fast->detect(curr_img, keyPoints, mask);
+        
+        // sorting keypoints by deacreasing order of strength
+        vector<float> responseVector;
+        for (unsigned int i =0 ; i<keyPoints.size(); i++) responseVector.push_back(keyPoints[i].response);
+        vector<int> Indx(responseVector.size()); std::iota (std::begin(Indx), std::end(Indx), 0);
+        if (responseVector.size() > 0) {
+            cv::sortIdx(responseVector, Indx, cv::SORT_DESCENDING);
+        }
+        vector<KeyPoint> keyPointsSorted;
+        for (unsigned int i = 0; i < keyPoints.size(); i++) keyPointsSorted.push_back(keyPoints[Indx[i]]);
+
+        // Suppression via Square Covering (SSC)
+        //vector<KeyPoint> sscKP = ssc(keyPointsSorted,processor_config.max_features_num-curr_pts_.size(),0.1,curr_img.cols,curr_img.rows);
+        vector<KeyPoint> sscKP = ssc(keyPointsSorted,diff,0.1,curr_img.cols,curr_img.rows);
+
+        // convert keypoints back to point2f new_pts_
+        cv::KeyPoint::convert(sscKP, new_pts_);
+    }
+
 }
 
 

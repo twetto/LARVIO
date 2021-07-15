@@ -57,13 +57,13 @@ sw_size: 20
 # online reset thresholds
 position_std_threshold: 8.0
 rotation_threshold: 0.2618
-translation_threshold: 0.4
+translation_threshold: 0.1
 tracking_rate_threshold: 0.1
 
 # feature triangulation parameters
 least_observation_number: 3
-max_track_len: 18
-feature_translation_threshold: 0.01
+max_track_len: 6
+feature_translation_threshold: -1.0
 
 # imu and camera measurement noise parameters
 noise_gyro: 5.0e-3

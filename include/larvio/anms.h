@@ -55,7 +55,7 @@ vector<cv::KeyPoint> ssc(vector<cv::KeyPoint> keyPoints, int numRetPoints,float 
     vector<int> result; result.reserve(keyPoints.size());
     while(!complete){
         width = low+(high-low)/2;
-        if (width == prevWidth || low>high || width < minDistance) {    //needed to reassure the same radius is not repeated again
+        if (width == prevWidth || low>high || high < minDistance) {    //needed to reassure the same radius is not repeated again
             ResultVec = result; //return the keypoints from the previous iteration
             break;
         }

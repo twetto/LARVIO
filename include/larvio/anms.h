@@ -32,7 +32,7 @@ struct sort_pred {
     }
 };
 
-vector<cv::KeyPoint> ssc(vector<cv::KeyPoint> keyPoints, int numRetPoints,float tolerance, int cols, int rows){
+vector<cv::KeyPoint> ssc(vector<cv::KeyPoint> keyPoints, int numRetPoints,float tolerance, int minDistance, int cols, int rows){
     // several temp expression variables to simplify solution equation
     int exp1 = rows + cols + 2*numRetPoints;
     long long exp2 = ((long long) 4*cols + (long long)4*numRetPoints + (long long)4*rows*numRetPoints + (long long)rows*rows + (long long) cols*cols - (long long)2*rows*cols + (long long)4*rows*cols*numRetPoints);
@@ -55,7 +55,7 @@ vector<cv::KeyPoint> ssc(vector<cv::KeyPoint> keyPoints, int numRetPoints,float 
     vector<int> result; result.reserve(keyPoints.size());
     while(!complete){
         width = low+(high-low)/2;
-        if (width == prevWidth || low>high || width < 2) { //needed to reassure the same radius is not repeated again
+        if (width == prevWidth || low>high || width < minDistance) {    //needed to reassure the same radius is not repeated again
             ResultVec = result; //return the keypoints from the previous iteration
             break;
         }

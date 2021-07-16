@@ -358,7 +358,8 @@ bool ImageProcessor::initializeFirstFrame() {
     for (unsigned int i = 0; i < keyPoints.size(); i++) keyPointsSorted.push_back(keyPoints[Indx[i]]);
 
     // Suppression via Square Covering (SSC)
-    vector<KeyPoint> sscKP = ssc(keyPointsSorted,processor_config.max_features_num,0.1,img.cols,img.rows);
+    //vector<KeyPoint> sscKP = ssc(keyPointsSorted,processor_config.max_features_num,0.1,img.cols,img.rows);
+    vector<KeyPoint> sscKP = ssc(keyPointsSorted,processor_config.max_features_num,0.1,processor_config.min_distance,img.cols,img.rows);
 
     // convert keypoints back to point2f new_pts_
     cv::KeyPoint::convert(sscKP, new_pts_);
@@ -1074,7 +1075,7 @@ void ImageProcessor::findNewFeaturesToBeTracked() {
 
         // Suppression via Square Covering (SSC)
         //vector<KeyPoint> sscKP = ssc(keyPointsSorted,processor_config.max_features_num-curr_pts_.size(),0.1,curr_img.cols,curr_img.rows);
-        vector<KeyPoint> sscKP = ssc(keyPointsSorted,diff,0.1,curr_img.cols,curr_img.rows);
+        vector<KeyPoint> sscKP = ssc(keyPointsSorted,diff,0.1,processor_config.min_distance,curr_img.cols,curr_img.rows);
 
         // convert keypoints back to point2f new_pts_
         cv::KeyPoint::convert(sscKP, new_pts_);

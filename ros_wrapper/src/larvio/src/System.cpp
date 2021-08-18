@@ -262,8 +262,8 @@ void System::publishVIO(const ros::Time& time) {
     active_feature_msg_ptr->width = active_feature_msg_ptr->points.size();
 
     odom_pub.publish(odom_msg);
-    stable_feature_pub.publish(stable_feature_msg_ptr);
-    active_feature_pub.publish(active_feature_msg_ptr);
+    stable_feature_pub.publish(*stable_feature_msg_ptr);
+    active_feature_pub.publish(*active_feature_msg_ptr);
     path_pub.publish(path_msg);
 }
 
